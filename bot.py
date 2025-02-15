@@ -5,7 +5,7 @@ logging.config.fileConfig('logging.conf')
 logging.getLogger().setLevel(logging.INFO)
 logging.getLogger("pyrogram").setLevel(logging.ERROR)
 logging.getLogger("cinemagoer").setLevel(logging.ERROR)
-from pyromod import listen
+#from pyromod import listen
 
 from pyrogram import Client
 from database.db import db
