@@ -46,12 +46,12 @@ class Bot(Client):
         temp.BOT_START_TIME = time.time()
         print(f"\n@{me.username} Is Started Now 🥰\n")
 
-        bots = await db.get_all_bots()
-        for bot in bots:
-            asyncio.create_task(restart_clone_bot(bot))
+       # bots = await db.get_all_bots()
+        #for bot in bots:
+        #    asyncio.create_task(restart_clone_bot(bot))
             
-        print("Successfully restarted all bots.")
-        #await self.send_message(LOG_CHANNEL, text=f"<b>{me.mention} Is Restarted ✅️</b>")
+        #print("Successfully restarted all bots.")
+        await self.send_message(LOG_CHANNEL, text=f"<b>{me.mention} Is Restarted ✅️</b>")
         app = web.AppRunner(await web_server())
         await app.setup()
         bind_address = "0.0.0.0"
