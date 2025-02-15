@@ -1,0 +1,12 @@
+pyrofork==2.3.45
+TgCrypto
+pymongo[srv]==3.12.3
+cinemagoer
+pyromod==1.5
+psutil
+shortzy
+pytz
+telegraph
+motor==2.5.1
+fuzzywuzzy
+python-Levenshtein
