@@ -29,7 +29,7 @@ SUPPORT_GROUP = int(support_group) if support_group and id_pattern.search(suppor
 
 # ------------------------------------------------------------------------ Log And Request channel  ---------------------------------------------------------------------------#
 
-LOG_CHANNEL = int(environ.get('LOG_CHANNEL', '-1002006503236'))
+LOG_CHANNEL = int(environ.get('LOG_CHANNEL', '-1001876507111'))
 CLONE_REQ_CHANNEL = int(environ.get('CLONE_REQ_CHANNEL', '-1001915834318'))
 
 # ------------------------------------------------------------------------ File Saver Database Url  ---------------------------------------------------------------------------#
