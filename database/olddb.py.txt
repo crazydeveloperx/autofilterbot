@@ -1,0 +1,24 @@
+import motor.motor_asyncio
+from info import DATABASE_NAMES, DATABASE_URI
+
+class Database:
+    
+    def __init__(self, uri, database_name):
+        self._client = motor.motor_asyncio.AsyncIOMotorClient(uri)
+        self.db = self._client[database_name]
+        self.col = self.db.users
+    
+    async def total_users_count(self):
+        count = await self.col.count_documents({})
+        return count
+    
+    
+    async def get_all_users(self):
+        return self.col.find({})
+    
+
+    async def get_user(self, user_id):
+        user_data = await self.users.find_one({"id": user_id})
+        return user_data
+
+db = Database(DATABASE_URI, DATABASE_NAMES)
