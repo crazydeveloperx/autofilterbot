@@ -1,0 +1,95 @@
+from pyrogram import Client, filters
+from pyrogram.errors import FloodWait, InputUserDeactivated, UserIsBlocked, PeerIdInvalid, MessageNotModified, MessageIdInvalid, ChatWriteForbidden
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup
+import asyncio
+import logging
+import time
+from database.db import db
+from clone_database.users_db import *
+from utils import *
+
+ADMINS = [6249148586]
+
+# Setup logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@Client.on_message(filters.private & filters.command("test_broadcast") & filters.user(ADMINS) & filters.reply)
+async def test_broadcast(bot, message):
+    # Initializing variables
+    bots = await db.get_all_bots()
+    total_users = 0
+    success = 0
+    blocked = 0
+    failed = 0
+    done = 0
+    start_time = time.time()
+    broadcast_msg = message.reply_to_message
+
+    msg = await message.reply_text("<b>Broadcast started...</b>", quote=True)
+
+    print("Broadcast started...")
+
+    for bot in bots:
+        bot_id = bot['bot_id']
+        users = await get_clone_bot_all_users(bot_id)
+
+        print(f"Processing bot: {bot_id}")
+
+        for _ in users:
+            total_users += 1
+
+        for idx, user in enumerate(users, 1):
+            print(f"Broadcasting to user: {user['_id']}")
+            status = await text_broadcast_clone_bot(bot, user['_id'], broadcast_msg)
+
+            if status == "Success":
+                success += 1
+            elif status == "Blocked":
+                blocked += 1
+            elif status == "Failed":
+                failed += 1
+
+            done += 1
+
+            # Add a delay after every 300 users
+            if idx % 300 == 0:
+                print(f"Processed {idx} users, waiting for 20 seconds...")
+                await asyncio.sleep(20)
+
+            # Update progress every 10 steps
+            if done % 10 == 0:
+                try:
+                    progress_message = (f"<b>Broadcast processing...\n\nTotal users - <code>{total_users}</code>\n"
+                                        f"Completed - <code>{done} / {total_users}</code>\nSuccess - <code>{success}</code>\n"
+                                        f"Blocked - <code>{blocked}</code>\nFailed - <code>{failed}</code></b>")
+                    await msg.edit(progress_message)
+                    print(f"Progress: {done}/{total_users} - Success: {success} - Blocked: {blocked} - Failed: {failed}")
+                except (FloodWait, MessageNotModified, MessageIdInvalid, ChatWriteForbidden) as e:
+                    if isinstance(e, FloodWait):
+                        await asyncio.sleep(e.value)
+                    else:
+                        logger.warning(f"Failed to edit message: {e}")
+
+    # Calculate time taken
+    time_taken = get_time(time.time() - start_time)
+    final_message = (f"<b>Broadcast completed\n\nTime taken - <code>{time_taken}</code>\n"
+                     f"Total users - <code>{total_users}</code>\nCompleted - <code>{done} / {total_users}</code>\n"
+                     f"Success - <code>{success}</code>\nBlocked - <code>{blocked}</code>\nFailed - <code>{failed}</code></b>")
+    await msg.edit(final_message)
+    print(final_message)
+
+async def text_broadcast_clone_bot(bot, user_id, message):
+    clone_bot = temp.CLONE_BOTS.get(bot['_id'])
+    try:
+        await clone_bot.send_message(chat_id=user_id, text=message.text)
+        return "Success"
+    except FloodWait as e:
+        await asyncio.sleep(e.value)
+        return await text_broadcast_clone_bot(bot, user_id, message)
+    except UserIsBlocked:
+        logger.info(f"User {user_id} has blocked the bot.")
+        return "Blocked"
+    except Exception as e:
+        logger.error(f"Error while broadcasting to user {user_id}: {e}")
+        return "Failed"
